@@ -1,0 +1,14 @@
+LUI x20, 0x1deca #Load the upper 20 bits of x20 with 0x1deca
+#Need to load 0xfec to finish the address however 4076 is too big to load in the ADDI command
+ADDI x21, x0, 0x7ff #Split 4076 by subtracting 2047 from 4076, load 2047 into x21
+ADDI x21, x21, 0x7ed #Load the rest 4076 - 2047 = 2029, add 0x7ed = 2029 into x21 to make x21 = 4076
+add x20, x20, x21 #Finish the address by adding x21 to x20 = 0x1decafec
+
+Addi x19, x0,0x0a #Load 0x0a into x19 
+SW x19, 0(x20) #Store the value of x19 = 0a into the first index of x20
+Addi x19, x0, 0xbc #Load 0xbc into x19 
+SW x19, 1(x20) #Store the value of x19 = bc into the second index of x20
+Addi x19, x0, 0xde #Load 0xde into x19
+Sw x19, 2(x20) #Store the value of x19 = de into the third index of x20
+addi x19, x0, 0xf0 #Load 0xf0 into x19
+sw x19, 3(x20) #Store the value of x19 = f0 into the third index of x20

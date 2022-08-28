@@ -1,0 +1,47 @@
+#Note: Assumed values in registers x13, x14 are positive
+addi x13, x0, 7 #Initalize x in x13 = 8
+addi x14, x0, 3 #Initialize y in x14 = 5
+jal x1, main #Jump to main function
+
+main:
+addi sp, sp -4 #Adjust stack to save return address
+sw x1, 0(sp) #Save return address to top of the program
+jal x1, compute #Run Compute method
+addi x10, x0, 1 #Initialize x10 to 1 from printing integers using ecall
+ecall #Ecall prints x11 the return for compute
+
+compute:
+sw x1, 4(sp) #Save return address to main function
+addi x15, x0, 8 #Initalize i in x15 = 8
+bge x13, x15, c1 #check if x >= 8
+jal x1, comp2 #Call Comp 2
+lw x1, 4(sp) #Restore return address to main function
+jalr x1 #Return to main
+c1:
+jal x1, comp1 #Call comp1 procedure
+lw x1, 4(sp) #Restore return address to main function
+jalr x1 #Return to main
+
+comp1:
+addi x15, x0, 6 #Initialize i in x15 = 6
+addi x16, x0, 5 #Initialize j in x16 = 5
+mulh x17, x14, x16 #Multiply y by 5 and store upper bits in x17
+mul x18, x14, x16 #Multiply y by 5 and store lower bits in x18
+add x16, x17, x18 #Add x17 and x18 to get 5y
+add x11, x16, x15 #Add x16 and x15 to et 5y + 6 and store in x11 to be used in compute
+jalr x1 #Return to compute
+
+comp2:
+addi x15, x0, 0 #Initialize counter variable to 0
+addi x19, x0, 1 #Initialize first
+bge x0, x0, While #Run the while loop
+While:
+bge x15, x14, exit
+mulh x17, x13, x19 #Multiply x by x19 and store upper bits in x17
+mul x18, x13, x19 #Multiply x by x19 and store lower bits in x18
+add x19, x17, x18 #Add x17 and x18 to x ^ (counter variable <=y)
+addi x15, x15, 1 #Add 1 to counter variable
+blt x15, x14 While #branch if loop should still be running
+exit:
+add x11, x0, x19 #Store x^y in x11 to be used in compute
+jalr x1 #Return to compute

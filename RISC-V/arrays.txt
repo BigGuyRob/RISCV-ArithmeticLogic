@@ -1,0 +1,94 @@
+.data 
+arr: .word -8, 14, 26, 7, 999, 0 
+
+.text
+lui x20, 0x78abc #Load the upper bits of the memory address into x20
+addi x20, x20, 2047 #Load the first part of the rest of the memory address def
+addi x20, x20, 1520 #Load the rest of the memory address; 0x98abcdef in x20
+la x9, arr #Load base address of arr in x9
+addi x12, x0, 6 #Initialize size in x12 to 6, this is how many values are going to be sorted. 
+#Initializing size to a value greater than the amount of values in arr will result
+#in zeros being added to the array and sorted accordingly
+jal x1, main
+
+
+main:
+addi sp, sp -4 #Adjust stack for return address
+sw x1, 0(sp) #Save return address to main call
+jal x1, Input #Call the function input to write the values of arr into memory starting at 0x98abcdef
+jal x1, Ascend #Call the function ascend to order the elements of the array
+jal x1, Output #Call the function output to output the values of the array in the console
+lw x1, 0(sp) #Restore return address to main call
+jal x1, exitProgram
+
+Ascend:
+addi sp, sp -4 #Adjust stack for return address
+sw x1, 4(sp) #Save return address to Ascend call
+addi x15, x0, 0 #Initialize i for loop 1 = 0
+Loop1:
+	add x16, x0, x15 #Initialize max_index = i
+    addi x17, x15, 1 #Initialize j for loop 2 = i + 1
+	Loop2:
+    	slli x21, x16, 2 #Get bit offset using max_index*4
+        slli x22, x17, 2 #Get bit offset using j*4
+        add x21, x21, x20 #Get address of 0x98abcdef[max_index]
+        add x22, x22, x20 #Get address of 0x98abcdef[j]
+        lw x30, 0(x21) #Initialize x30 = 0x98abcdef[max_index]
+        lw x31, 0(x22) #Initialize x31 = 0x98abcdef[j]
+        blt x30, x31, nochange #If the value is less than max value do not assign new max 
+        add x16, x0, x17 #If value is greater than max, assign new max_index
+		nochange:
+        addi x17, x17, 1 #Increment j = j + 1
+        blt x17, x12, Loop2 #Loop Loop 2 again
+        jal x1, Swap #Swap what max_index with i
+      	addi x3, x12, -1 #Reinitialize i = j - 1 to loop again
+        addi x15, x15, 1 #Increment i = i + 1
+        blt x15, x3, Loop1 #Loop Loop 1 again if i < size - 1
+lw x1, 4(sp) #Restore return address to Ascend call
+jalr x1 #Return to main function
+
+Swap:
+slli x29, x15, 2 #Get bit offset in x29 = i *4
+add x29, x29, x20 #Get address of 0x98abcdef[i]
+lw x30, 0(x29) #load 0x98abcdef[i] in x30
+slli x28, x16, 2 #Get bit offset x29 = min_index*4
+add x28, x28, x20 #Get address of 0x98abcdef[min_index]
+lw x31, 0(x28)#load 0x98abcdef[min_id] in x31
+sw x31, 0(x29) #put 0x98abcdef[min_index] in 0x98abcdef[i]
+sw x30, 0(x28) #put 0x98abcdef[i] in 0x98abcdef[min_index]
+jalr x1
+
+Input:
+addi x4, x0, 0 #Initalize Index in x4 = 0
+Inputloop:
+bgt x4, x12, Inputexit
+slli x5, x4, 2 #Get bit offset using Index*4
+add x6, x5, x9 #Get address of arr[index]
+lw x7, 0(x6) #Get content of arr[index]
+add x8, x5, x20 #Get address of 0x98abcdef[index]
+sw x7, 0(x8) #Save content of arr[index] into ox98abcdef[index]
+addi x4, x4, 1 #Increment the counter variable x4 by 1
+blt x4, x12, Inputloop
+Inputexit:
+jalr x1 #Return to main
+
+Output:
+addi x4, x0, 0 #Initialize Index in x4 = 0
+Outputloop:
+bgt x4, x12, Outputexit
+addi x10, x0, 1 #Initialize ecall method x10 = 1 for printing integers
+slli x5, x4, 2 #Get bit offset using Index*4
+add x6, x5, x20 #Get address of 0x98abcdef[index]
+lw x11, 0(x6) #Get content of 0x98abcdef[index]
+ecall #Print the array[index]
+addi x11, x0, 44 #Initialize ecall method x11 = 44 for printing ","
+addi x10, x0, 11 #Initialize ecall method x10 = 11 for printing ASCII charcaters
+ecall #Print the comma
+addi x4, x4, 1 #Increment the counter variable x4 by 1
+blt x4, x12, Outputloop
+Outputexit:
+jalr x1 #Return to main
+
+
+exitProgram:
+

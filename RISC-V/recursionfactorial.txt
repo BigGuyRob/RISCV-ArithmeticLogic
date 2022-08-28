@@ -1,0 +1,60 @@
+addi x10, x0, 1 #Initialize ecall method for printing integers
+
+main:
+addi x12, x0, 3 #Initialize x in x12 
+addi x13, x0, 2 #Initialize multiplier value to 2
+add x20, x0, x12 #Initialize counter variable to x
+addi x15, x0, 0 #Initialize total variable in x15
+add x21, x0, x12 #Initialize recursivecounter to x
+slli x23, x21, 2 #Initialize Stack memory to x * 4
+add sp, sp x23 #Make room for return addresses in stack
+jal x1, Recursive #Call recursive function
+jal x1, Ecall #Ecall (print total)
+add x15,x0 x0 #Reset total to 0 
+jal x1, Iteration #Call Iteration function
+jal x1, Ecall #Ecall (print total)
+jal x1, ExitProgram #Exit program
+
+
+Recursive: #Argument (x) in x12
+slli x23, x21, 2 #Initialize new stack memory offset based on recursive counter
+add x22, x23, sp #Get new memory offset to save return address to stack
+sw x1, 0(x22) #Save call address to stack
+ble x12, x0, BaseCase #If f(0) return base case
+mulh x18, x13, x12 #Multiply x by 2 and store upper bits in x18
+mul x17, x13, x12 #Multiply x by 2 and store lower bits in x17
+add x17, x18, x17 #Make x17 the result of x*2
+add x15, x15, x17 #Add result to total
+addi x12, x12, -1 #Decrement x by 1 
+addi x21, x21, 1 #Increment Recursive counter by 1
+jal x1, Recursive
+BaseCase:
+sub x22, sp, x23 #Subtract the current offset from sp to get original return address
+lw x1, 0(x22) #Restore return address to main
+addi x15, x15, 0 #Return f(0) = 0 
+jalr x1 #Return to main
+
+
+Iteration: #Counter (x) in x20
+Loop:
+ble x20, x0, ExitLoop
+mulh x18, x13, x20 #Multiply counter by 2 and store upper bits in x18
+mul x17, x13, x20 #Multiply counter by 2 and store lower bits in x17
+add x17, x18, x17 #Make x17 the result of counter*2
+add x15, x15, x17 #Add result to total
+addi x20, x20, -1 #Decrement counter by 1 
+bge x20, x0, Loop #Run loop counter > 0
+ExitLoop:
+jalr x1 #Return to main
+
+
+Ecall:
+addi x11, x15, 0 #Put total x15 in x11
+ecall
+addi x10, x0, 11 #Setup ecall for 11 for printing ASCII characters
+addi x11, x0, 10 #Print new line
+ecall
+addi x10, x0, 1#Setup ecall again for printing integers
+jalr x1 #Return to main
+
+ExitProgram:

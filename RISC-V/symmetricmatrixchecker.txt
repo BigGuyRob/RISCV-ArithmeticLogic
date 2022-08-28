@@ -1,0 +1,146 @@
+.data
+NewLine: .asciiz "\n"
+OriginalMatrixStr: .asciiz "Original Matrix\n"
+TransposedMatrixStr: .asciiz "Transposed Matrix\n"
+MatricesAreSymmetric:.asciiz "Matrices are Symmetric - 1\n"
+MatricesAreNotSymmetric: .asciiz "Matrices are Not Symmetric - 0 \n"
+row: .word 3
+col: .word 3
+arr: .word 1, -2, 2
+	 .word 1, 5, 6
+     .word 7, 8, 9
+
+
+.text
+
+main:
+lui x15, 0xb00b #Load base address of tArr
+addi x15, x15, 0x7ff #Rest of address of tArr
+addi x15, x15, 0x6A1 #Rest of address of tArr
+la x12, arr #Load base address of arr in x12
+lw x13, row #Load row size of arr in x13
+lw x14, col #Load col size of arr in x14
+#------------------
+addi x10, x0, 4
+la x11, OriginalMatrixStr
+ecall
+jal x1, Output 
+#------------------
+beq x13, x14, MatrixSquare #If the matrix is square skip instructions
+addi x10, x0, 17 #Setup ecall argument with dec 303
+addi x11, x0, 303 #Setup ecall argument for error code
+ecall #Ecall
+jal x1, ExitProgram #Exit the program
+#------------------
+MatrixSquare: #If the matrices are square
+addi x10, x0, 4 #Printing strings
+la x11, TransposedMatrixStr #Load ret message
+ecall #ecall
+jal x1, Transpose #transpose the matrix
+addi x12, x15, 0 #Load the transposed matrix into Output argument
+jal x1, Output #output matrix
+#------------------
+la x12, arr
+jal x1, CheckSymmetric
+addi x10, x0, 4
+ecall
+jal x1, ExitProgram
+
+
+#Inputs x13 row, x14 col, arr in x12, tArr in x15
+Transpose:
+addi x4, x0, 0 #Initialize i in x4 = 0
+addi x5, x0, 0 #Initialize j in x5 = 0
+addi x19, x0, 0 #Initialize global counter to 0
+addi x21, x0, 0 #Initialize counter for transposed matrix
+Transposeloopj:
+bgt x5, x14, Transposeexitj
+Transposeloopi:
+bgt x4, x13, Transposeexiti
+#-----------------------------------
+slli x7, x19, 2 #Get bit offset using Global counter*4
+add x7, x7, x12 #Get address of input arr
+lw x25, 0(x7) #Get content of input arr[Index]
+#------------------------------------
+slli x9, x21, 2 #Get bit offset using transposed matrix counter*4
+add x9, x9, x15 #Get address of tranposed arr
+sw x25, 0(x9) 
+#-----------------------------------------------------
+addi x4, x4, 1 #Increment the counter variable x4 by 1
+addi x19, x19, 1 #increment global counter
+add x21, x21, x13
+blt x4, x13, Transposeloopi
+Transposeexiti:
+addi x5, x5, 1 #Increment j by 1
+addi x4, x0, 0 #Reset row counter
+add x21, x0, x0
+add x21, x5, x0
+blt x5, x14, Transposeloopj
+Transposeexitj:
+jalr x1 #Return to main
+
+#Inputs x12 arr, x13 row, x14, col, tArr x15
+CheckSymmetric:
+addi x4, x0, 0 #Initialize i in x4 = 0
+addi x5, x0, 0 #Initialize j in x5 = 0
+addi x19, x0, 0 #Initialize global counter to 0
+Symmetricloopj:
+bgt x5, x14, Symmetricexitj
+Symmetricloopi:
+bgt x4, x13, Symmetricexiti
+slli x7, x19, 2 #Get bit offset using Global counter*4
+add x7, x7, x12 #Get address of input arr
+lw x25, 0(x7) #Get content of input arr[Index] in x25
+slli x6, x19, 2 #Get bit offset using Global counter*4
+add x6, x6, x15 #Get address of input tArr 
+lw x24, 0(x6) #Get content of input tArr[Index] in x24
+addi x4, x4, 1
+addi x19, x19, 1
+beq x24, x25, KeepChecking #Once we see an element not equal were done
+la x11, MatricesAreNotSymmetric
+jalr x1 #Return to main
+KeepChecking:
+blt x4, x13, Symmetricloopi
+Symmetricexiti:
+addi x5, x5, 1 #Increment j by 1
+addi x4, x0, 0 #Reset row counter
+blt x5, x14, Symmetricloopj
+Symmetricexitj:
+la x11, MatricesAreSymmetric
+jalr x1 #Return to main
+
+
+
+#Inputs: x13 row, x14 col, arr x12
+Output:
+addi x4, x0, 0 #Initialize i in x4 = 0
+addi x5, x0, 0 #Initialize j in x5 = 0
+addi x19, x0, 0 #Initialize global counter to 0
+Outputloopj:
+bgt x5, x14, Outputexitj
+Outputloopi:
+bgt x4, x13, Outputexiti
+addi x10, x0, 1 #Initialize ecall method x10 = 1 for printing integers
+slli x7, x19, 2 #Get bit offset using Global counter*4
+add x7, x7, x12 #Get address of input arr
+lw x11, 0(x7) #Get content of input arr[Index]
+ecall #Print the array[index]
+addi x11, x0, 32 #Initialize ecall method x11 = 32 for printing " "
+addi x10, x0, 11 #Initialize ecall method x10 = 11 for printing ASCII charcaters
+ecall #Print the space
+addi x4, x4, 1 #Increment the counter variable x4 by 1
+addi x19, x19, 1#increment global counter
+blt x4, x13, Outputloopi
+Outputexiti:
+addi x5, x5, 1 #Increment j by 1
+addi x4, x0, 0 #Reset row counter
+la x8, NewLine #Load print statement asciiz
+addi x11, x8, 0 #Setup output arguement for printing "new line"
+addi x10, x0, 4 #Setup ecall for printing string
+ecall
+blt x5, x14, Outputloopj
+Outputexitj:
+jalr x1 #Return to main
+
+ExitProgram:
+

@@ -1,0 +1,22 @@
+addi x13, x0, 9 #Initialize a in x13; a = 9
+addi x14, x0, 6 #Initialize b in x14; b = 6
+addi x15, x0, 3 #Initialize c in x15; c = 3
+jal Exercise4
+add x15, x10, x0 #Load the returned value from Exercise4 in x15; c = Excercise4(a,b)
+addi x11, x15, 0 #Store value of x15 in x11 for print in ecall
+addi x10, x0, 1 #Store 1 in x10 for printing integers using ecall
+ecall
+addi x11, x0, 10 #Store 10 in x11 for print ASCII newLine in ecall
+addi x10, x0, 11 #Store 11 in x10 for printing ASCII characters using ecall
+ecall
+
+Exercise4:
+	add x5, x14, x0 #Initialize res in x5; res = b
+	add x6, x13, x0 #Initialize i in x6; i = a
+    	mulh x7, x13, x14 #Initialize temp variable in x7; t = a*b
+	While:
+    	add x5, x5, x13 #res = res + a
+    	addi x6, x6, 1 #i = i + 1
+    	blt x5, x7, While #If res < t (a*b)
+    	add x10, x5, x0 #Place value of i in x10 for return
+    	jalr x1 #Return back to caller
