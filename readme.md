@@ -1,4 +1,7 @@
 #Using Venus Simulator Online
+
+#Rutgers ECE 14:332:333 Computer Architecture Lab
+
 #Major things learned between projects
 - Timing analysis
 - Memory Logic
