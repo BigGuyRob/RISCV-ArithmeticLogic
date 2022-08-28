@@ -3,4 +3,4 @@
 - Timing analysis
 - Memory Logic
 - RISC-V Instruction Set Architecture
-- Von Neuman Architecure 
+- Von Neumann Architecure 
